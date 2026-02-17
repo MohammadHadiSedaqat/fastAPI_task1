@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Modern UI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🚀 FastAPI Explorer</h1>
+
+        <div class="form-group">
+            <label>Select Endpoint</label>
+            <select id="endpoint">
+                <option value="/">🏠 / </option>
+                <option value="/user">👤 /user (Query)</option>
+                <option value="/hello">👋 /hello/{name} (Path: name)</option>
+                <option value="/username">🆔 /username/{username} (Path: name)</option>
+                <option value="direct">✨ /{name} (Direct Path)</option>
+            </select>
+        </div>
+
+        <div id="params-group" class="form-group">
+            <label>Input Value</label>
+            <input type="text" id="param" placeholder="Type something here...">
+        </div>
+
+        <div class="url-preview" id="url-display">
+            <span>REQUEST URL:</span>
+            <code id="live-url">http://127.0.0.1:8000/</code>
+        </div>
+
+        <button id="send">Send Request</button>
+
+        <div class="result-box">
+            <span>RESPONSE JSON:</span>
+            <pre id="output">Waiting for your command...</pre>
+        </div>
+    </div>
+
+    <script>
+        const endpointSelect = document.getElementById("endpoint");
+        const paramInput = document.getElementById("param");
+        const sendBtn = document.getElementById("send");
+        const outputDiv = document.getElementById("output");
+        const liveUrlCode = document.getElementById("live-url");
+        const urlDisplay = document.getElementById("url-display");
+
+        function generateUrl() {
+            let ep = endpointSelect.value;
+            let param = paramInput.value.trim();
+            const baseUrl = "http://127.0.0.1:8000";
+            let finalUrl = baseUrl;
+
+            if (ep === "/") {
+                finalUrl = baseUrl + "/";
+                paramInput.parentElement.style.display = "none";
+                urlDisplay.style.opacity = "0.5";
+            } else {
+                paramInput.parentElement.style.display = "block";
+                urlDisplay.style.opacity = "1";
+
+                if (ep === "/user") {
+                    finalUrl = `${baseUrl}/user?name=${encodeURIComponent(param)}`;
+                } else if (ep === "/hello") {
+                    finalUrl = `${baseUrl}/hello/${encodeURIComponent(param)}`;
+                } else if (ep === "/username") {
+                    finalUrl = `${baseUrl}/username/${encodeURIComponent(param)}`;
+                } else if (ep === "direct") {
+                    finalUrl = `${baseUrl}/${encodeURIComponent(param)}`;
+                }
+            }
+
+            liveUrlCode.textContent = finalUrl;
+            return finalUrl;
+        }
+
+        endpointSelect.addEventListener("change", generateUrl);
+        paramInput.addEventListener("input", generateUrl);
+
+        generateUrl();
+
+        sendBtn.addEventListener("click", async () => {
+            sendBtn.innerHTML = "📡 Sending...";
+            sendBtn.disabled = true;
+
+            const url = generateUrl();
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                outputDiv.textContent = JSON.stringify(data, null, 4);
+                outputDiv.className = "flash";
+                setTimeout(() => outputDiv.className = "", 500);
+            } catch(e) {
+                outputDiv.textContent = "❌ Error: " + e.message;
+            } finally {
+                sendBtn.innerHTML = "Send Request";
+                sendBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
